@@ -1,7 +1,7 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import ChatInterface from "./components/chat/ChatInterface";
+import { ChatInterface } from "./components/chat/ChatInterface";
 import { LogOut, User } from "lucide-react";
 
 function Home() {
@@ -19,7 +19,7 @@ function Home() {
   }
 
   return (
-    <div className="min-h-[80vh] bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {authenticated ? (
         <div className="h-screen flex flex-col">
           {/* Top Navigation */}
