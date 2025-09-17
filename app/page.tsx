@@ -30,15 +30,17 @@ function Home() {
               </div>
               <div>
                 <h1 className="font-semibold text-gray-900">SendAI</h1>
-                <p className="text-xs text-gray-500">Powered Solana Agent Kit</p>
+                <p className="text-xs text-gray-500">
+                  Powered Solana Agent Kit
+                </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {user && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <User className="w-4 h-4" />
-                  <span>{user?.wallet?.address || 'Anonymous'}</span>
+                  <span>{user?.wallet?.connectorType || "Anonymous"}</span>
                 </div>
               )}
               <button
@@ -60,32 +62,19 @@ function Home() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="max-w-md w-full mx-4">
             <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-xl">AI</span>
-              </div>
-              
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Solana AI Chat
+                SendAI Chat
               </h1>
-              <p className="text-gray-600 mb-6">
-                Chat with AI and interact with Solana blockchain using natural language. 
-                Connect your wallet to get started.
-              </p>
-              
+              <p className="text-gray-600 mb-6">send it playground</p>
+
               <button
                 onClick={login}
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                Connect Wallet & Start Chatting
+                Login
               </button>
-              
-              <div className="mt-6 pt-6 border-t text-sm text-gray-500">
-                <div className="flex items-center justify-center gap-4">
-                  <span>✨ OpenAI GPT-4</span>
-                  <span>🔗 Solana Integration</span>
-                  <span>🔐 Secure Auth</span>
-                </div>
-              </div>
+
+              <p className="text-gray-600 mt-6">powered by Privy</p>
             </div>
           </div>
         </div>

@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Solana AI Chat",
-  description: "Chat with AI and interact with Solana blockchain using natural language",
-  keywords: "solana, ai, chat, blockchain, crypto, wallet",
+  description: "Chat with AI and interact with Solana using natural language",
+  keywords: "solana, ai, chat, crypto, wallet",
   authors: [{ name: "SendAI Team" }],
   robots: "index, follow",
 };

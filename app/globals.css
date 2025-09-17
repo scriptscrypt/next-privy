@@ -59,11 +59,11 @@ body {
 }
 
 /* disable scrollbar everywhere */
-.no-scrollbar::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none;
 }
 
-.no-scrollbar {
+* {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }

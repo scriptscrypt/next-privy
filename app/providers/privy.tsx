@@ -15,11 +15,11 @@ export const PrivyProviderWrapper = ({
           createOnLogin: "users-without-wallets",
         },
         appearance: {
-          walletChainType: "ethereum-and-solana",
+          walletChainType: "solana-only",
           theme: "light",
           accentColor: "#6366f1",
         },
-        loginMethods: ["email", "sms", "wallet"],
+        loginMethods: ["email"]
       }}
     >
       {children}

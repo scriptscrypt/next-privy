@@ -55,10 +55,10 @@ export function ChatInterface() {
         tools && tools.length > 0 ? model.bindTools(tools) : model;
 
       const systemMessage =
-        new SystemMessage(`You're a helpful Solana assistant that helps people with Solana blockchain operations and questions.
+        new SystemMessage(`You're a helpful Solana assistant that helps people with Solana operations and questions.
         
         You can provide information about:
-        - Solana blockchain basics and concepts
+        - Solana basics and concepts
         - Token transfers and transactions
         - DeFi protocols on Solana
         - NFTs and digital assets
@@ -68,7 +68,7 @@ export function ChatInterface() {
         
         The user's wallet address is: ${userWallet || "Not connected"}
         
-        You have access to Solana blockchain tools that can execute real transactions and operations.
+        You have access to Solana tools that can execute real transactions and operations.
         Always explain what you're doing when using tools and ask for confirmation before executing transactions.
         
         Be helpful, informative, and always prioritize security best practices.`);
