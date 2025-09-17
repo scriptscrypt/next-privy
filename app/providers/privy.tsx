@@ -9,12 +9,12 @@ export const PrivyProviderWrapper = ({
 }) => {
   return (
     <PrivyProvider
-      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
       config={{
         embeddedWallets: {
           createOnLogin: "users-without-wallets",
         },
-        appearance: { 
+        appearance: {
           walletChainType: "ethereum-and-solana",
           theme: "light",
           accentColor: "#6366f1",

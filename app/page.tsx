@@ -26,11 +26,11 @@ function Home() {
           <nav className="bg-white border-b px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AI</span>
+                <span className="text-white font-bold text-sm">S</span>
               </div>
               <div>
-                <h1 className="font-semibold text-gray-900">Solana AI Chat</h1>
-                <p className="text-xs text-gray-500">Powered by OpenAI & Solana Agent Kit</p>
+                <h1 className="font-semibold text-gray-900">SendAI</h1>
+                <p className="text-xs text-gray-500">Powered Solana Agent Kit</p>
               </div>
             </div>
             
@@ -38,7 +38,7 @@ function Home() {
               {user && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <User className="w-4 h-4" />
-                  <span>{user.email?.address || user.phone?.number || 'Anonymous'}</span>
+                  <span>{user?.wallet?.address || 'Anonymous'}</span>
                 </div>
               )}
               <button
