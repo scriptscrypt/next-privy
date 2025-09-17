@@ -3,102 +3,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { marked } from "marked";
-import { generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { useSolanaAgent } from "@/app/hooks/useSolanaAgent";
-
-// Convert Zod schema tools to AI SDK compatible format
-const convertToolsToAISDK = (tools: any) => {
-  if (!tools || typeof tools !== "object") return undefined;
-
-  const convertedTools: any = {};
-
-  for (const [key, tool] of Object.entries(tools)) {
-    const typedTool = tool as any;
-    if (typedTool?.id && typedTool?.description) {
-      // Completely replace the schema with a valid JSON Schema
-      const cleanTool = {
-        description: typedTool.description,
-        parameters: {
-          type: "object" as const,
-          properties: {
-            // Common Solana tool parameters
-            amount: {
-              type: "number" as const,
-              description: "Amount for the operation",
-            },
-            address: {
-              type: "string" as const,
-              description: "Wallet or token address",
-            },
-            tokenAddress: {
-              type: "string" as const,
-              description: "Token mint address",
-            },
-            to: { type: "string" as const, description: "Recipient address" },
-            ticker: {
-              type: "string" as const,
-              description: "Token ticker symbol",
-            },
-            mint: {
-              type: "string" as const,
-              description: "Token mint address",
-            },
-            walletAddress: {
-              type: "string" as const,
-              description: "Wallet address",
-            },
-            inputAmount: {
-              type: "number" as const,
-              description: "Input amount",
-            },
-            outputMint: {
-              type: "string" as const,
-              description: "Output token mint",
-            },
-            inputMint: {
-              type: "string" as const,
-              description: "Input token mint",
-            },
-            slippageBps: {
-              type: "number" as const,
-              description: "Slippage in basis points",
-            },
-            tokenSymbol: {
-              type: "string" as const,
-              description: "Token symbol",
-            },
-            page: {
-              type: "number" as const,
-              description: "Page number for pagination",
-            },
-          },
-          additionalProperties: true,
-          required: [],
-        },
-        execute: typedTool.execute,
-      };
-
-      // Use the tool ID as the key
-      convertedTools[typedTool.id] = cleanTool;
-    }
-  }
-
-  console.log("Converted tools:", Object.keys(convertedTools));
-  return Object.keys(convertedTools).length > 0 ? convertedTools : undefined;
-};
 
 // Configure marked to prevent nested block elements in p tags
 marked.setOptions({
   breaks: true,
   gfm: true,
 });
-import { type CoreMessage } from "ai";
+import {
+  HumanMessage,
+  AIMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 
 export function ChatInterface() {
   const { user } = usePrivy();
   const { agent, tools, isReady, connectedWallet } = useSolanaAgent();
-  const [messages, setMessages] = useState<CoreMessage[]>([]);
+  const [messages, setMessages] = useState<(HumanMessage | AIMessage)[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -114,7 +36,7 @@ export function ChatInterface() {
   const handleSend = async () => {
     if (!input.trim() || !isReady) return;
 
-    const userMessage: CoreMessage = { role: "user", content: input };
+    const userMessage = new HumanMessage(input);
     const updatedMessages = [...messages, userMessage];
 
     setMessages(updatedMessages);
@@ -122,22 +44,18 @@ export function ChatInterface() {
     setIsLoading(true);
 
     try {
-      // Check if OpenAI API key is available
-      const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY!;
-      if (!apiKey) {
-        throw new Error(
-          "OpenAI API key is missing. Please set OPENAI_API_KEY in your environment variables."
-        );
-      }
-
-      const openai = createOpenAI({
-        apiKey: apiKey,
+      const model = new ChatOpenAI({
+        modelName: "gpt-4o-mini",
+        apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+        temperature: 0.7,
       });
 
-      const result = await generateText({
-        model: openai("gpt-4o-mini"),
-        messages: updatedMessages,
-        system: `You're a helpful Solana assistant that helps people with Solana blockchain operations and questions.
+      // Bind tools to the model
+      const modelWithTools =
+        tools && tools.length > 0 ? model.bindTools(tools) : model;
+
+      const systemMessage =
+        new SystemMessage(`You're a helpful Solana assistant that helps people with Solana blockchain operations and questions.
         
         You can provide information about:
         - Solana blockchain basics and concepts
@@ -153,29 +71,90 @@ export function ChatInterface() {
         You have access to Solana blockchain tools that can execute real transactions and operations.
         Always explain what you're doing when using tools and ask for confirmation before executing transactions.
         
-        Be helpful, informative, and always prioritize security best practices.`,
-        // tools: convertToolsToAISDK(tools),
-      });
+        Be helpful, informative, and always prioritize security best practices.`);
 
-      setMessages([
-        ...updatedMessages,
-        {
-          role: "assistant",
-          content: result.text || "Sorry, I didn't quite get that.",
-        },
-      ]);
+      const allMessages = [systemMessage, ...updatedMessages];
+
+      const result = await modelWithTools.invoke(allMessages);
+
+      // Check if the result contains tool calls
+      if (result.tool_calls && result.tool_calls.length > 0) {
+        console.log("Tool calls detected:", result.tool_calls);
+
+        // Execute the tools
+        const toolResults = [];
+        for (const toolCall of result.tool_calls) {
+          try {
+            console.log(
+              `Executing tool: ${toolCall.name} with args:`,
+              toolCall.args
+            );
+
+            // Find the corresponding tool from our tools array
+            const tool = tools?.find((t) => t.name === toolCall.name);
+            if (!tool) {
+              throw new Error(`Tool ${toolCall.name} not found`);
+            }
+
+            // Execute the tool
+            const toolResult = await tool.invoke(toolCall.args);
+            toolResults.push({
+              toolCallId: toolCall.id,
+              toolName: toolCall.name,
+              result: toolResult,
+            });
+
+            console.log(`Tool ${toolCall.name} result:`, toolResult);
+          } catch (error) {
+            console.error(`Error executing tool ${toolCall.name}:`, error);
+            toolResults.push({
+              toolCallId: toolCall.id,
+              toolName: toolCall.name,
+              result: {
+                error: error instanceof Error ? error.message : String(error),
+              },
+            });
+          }
+        }
+
+        // Create a response message with the tool results
+        let responseContent =
+          typeof result.content === "string" ? result.content : "";
+
+        // Add tool results to the response
+        if (toolResults.length > 0) {
+          responseContent += "\n\n**Tool Results:**\n";
+          toolResults.forEach(({ toolName, result }) => {
+            if (result.error) {
+              responseContent += `- **${toolName}**: Error - ${result.error}\n`;
+            } else {
+              responseContent += `- **${toolName}**: ${JSON.stringify(
+                result,
+                null,
+                2
+              )}\n`;
+            }
+          });
+        }
+
+        const aiMessage = new AIMessage(responseContent);
+        setMessages([...updatedMessages, aiMessage]);
+      } else {
+        const aiMessage = new AIMessage(
+          typeof result.content === "string"
+            ? result.content
+            : JSON.stringify(result.content)
+        );
+        setMessages([...updatedMessages, aiMessage]);
+      }
     } catch (error) {
       console.error("AI error:", error);
-      setMessages([
-        ...updatedMessages,
-        {
-          role: "assistant",
-          content:
-            error instanceof Error
-              ? `Error: ${error.message}`
-              : "Oops! Something went wrong. Please make sure your environment variables are set correctly.",
-        },
-      ]);
+      const errorMessage = new AIMessage(
+        error instanceof Error
+          ? `Error: ${error.message}`
+          : "Oops! Something went wrong. Please make sure your environment variables are set correctly."
+      );
+      setMessages([...updatedMessages, errorMessage]);
     }
 
     setIsLoading(false);
@@ -211,10 +190,10 @@ export function ChatInterface() {
                 <div className="flex-shrink-0 mr-3">
                   <div
                     className={`${
-                      m.role === "user" ? "bg-blue-500" : "bg-gray-600"
+                      m instanceof HumanMessage ? "bg-blue-500" : "bg-gray-600"
                     } flex items-center justify-center w-8 h-8 rounded-lg`}
                   >
-                    {m.role === "user" ? (
+                    {m instanceof HumanMessage ? (
                       <span className="text-white text-sm font-medium">U</span>
                     ) : (
                       <span className="text-white text-sm font-medium">AI</span>
@@ -225,7 +204,7 @@ export function ChatInterface() {
                 <div className="flex flex-col items-start">
                   <div className="flex items-center mb-1">
                     <span className="text-xs text-gray-600 mr-2">
-                      {m.role === "user" ? "You" : "Solana AI"}
+                      {m instanceof HumanMessage ? "You" : "Solana AI"}
                     </span>
                     <span className="text-xs text-gray-500">
                       {getCurrentTime()}
@@ -234,7 +213,7 @@ export function ChatInterface() {
 
                   <div
                     className={`p-3 rounded-lg max-w-3xl ${
-                      m.role === "user"
+                      m instanceof HumanMessage
                         ? "bg-blue-500 text-white"
                         : "bg-gray-100 text-gray-900"
                     }`}

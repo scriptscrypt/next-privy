@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://auth.privy.io https://api.mainnet-beta.solana.com https://api.devnet.solana.com https://api.testnet.solana.com https://rpc.helius.xyz https://solana-mainnet.g.alchemy.com https://www.google-analytics.com https://api.openai.com https://explorer-api.walletconnect.com https://registry.walletconnect.com wss:",
+              "connect-src 'self' https://auth.privy.io https://api.mainnet-beta.solana.com https://api.devnet.solana.com https://api.testnet.solana.com https://rpc.helius.xyz https://mainnet.helius-rpc.com https://devnet.helius-rpc.com https://testnet.helius-rpc.com https://solana-mainnet.g.alchemy.com https://www.google-analytics.com https://api.openai.com https://explorer-api.walletconnect.com https://registry.walletconnect.com wss:",
               "frame-src 'self' https://auth.privy.io",
               "object-src 'none'",
               "base-uri 'self'",

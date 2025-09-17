@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useSolanaWallets } from "@privy-io/react-auth";
-import { SolanaAgentKit, createVercelAITools } from "solana-agent-kit";
+import { SolanaAgentKit, createLangchainTools } from "solana-agent-kit";
 import TokenPlugin from "@solana-agent-kit/plugin-token";
 import { Connection, PublicKey } from "@solana/web3.js";
 
@@ -56,14 +56,15 @@ export function useSolanaAgent() {
         {}
       ).use(TokenPlugin);
 
-      // Create tools for AI
-      const agentTools = createVercelAITools(
+      // Create tools for AI - Langchain tools are already in the correct format
+      const agentTools = createLangchainTools(
         agentInstance,
         agentInstance.actions
       );
 
       console.log("agentTools", agentTools);
 
+      
       return {
         agent: agentInstance,
         tools: agentTools,
